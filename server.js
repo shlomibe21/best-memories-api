@@ -1,12 +1,21 @@
-const express = require('express');
- const app = express();
+const express = require("express");
+const app = express();
 
- const PORT = process.env.PORT || 3000;
+const cors = require("cors");
+const { CLIENT_ORIGIN } = require("./config");
 
- app.get('/api/*', (req, res) => {
-   res.json({ok: true});
- });
+const PORT = process.env.PORT || 3000;
 
- app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
+app.get("/api/*", (req, res) => {
+  res.json({ ok: true });
+});
 
- module.exports = {app};
+app.use(
+  cors({
+    origin: CLIENT_ORIGIN
+  })
+);
+
+app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
+
+module.exports = { app };
