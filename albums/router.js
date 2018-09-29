@@ -67,7 +67,7 @@ router.post("/", (req, res) => {
     Albums.create({
         albumName: req.body.albumName,
         dateCreated: req.body.dateCreated,
-        text: req.body.text,
+        comment: req.body.comment,
         files: req.body.files
     })
         .then(Albums => {
@@ -92,7 +92,7 @@ router.put('/:id', (req, res) => {
     // we only support a subset of fields being updateable.
     // if the user sent over any of the updatableFields, we udpate those values
     // in document
-    const updateableFields = ['albumName', 'dateCreated', 'text', 'files'];
+    const updateableFields = ['albumName', 'dateCreated', 'comment', 'files'];
 
     updateableFields.forEach(field => {
         if (field in req.body) {

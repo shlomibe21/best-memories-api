@@ -42,18 +42,18 @@ function seedAlbumsData() {
     seedData.push({
       albumName: faker.name.findName(),
       dateCreated: faker.date.past(),
-      text: faker.lorem.text(),
+      comment: faker.lorem.text(),
       files: [
         {
           fileName: faker.name.findName(),
           dateAdded: faker.date.past(),
-          text: faker.lorem.text(),
+          comment: faker.lorem.text(),
           storageLocation: "url"
         },
         {
           fileName: faker.name.findName(),
           dateAdded: faker.date.past(),
-          text: faker.lorem.text(),
+          comment: faker.lorem.text(),
           storageLocation: "url"
         }
       ]
@@ -110,7 +110,7 @@ describe("Best Memories resource", function() {
               "id",
               "albumName",
               "dateCreated",
-              "text",
+              "comment",
               "files"
             );
           });
@@ -139,7 +139,7 @@ describe("Best Memories resource", function() {
               "id",
               "albumName",
               "dateCreated",
-              "text",
+              "comment",
               "files"
             );
           });
@@ -167,7 +167,7 @@ describe("Best Memories resource", function() {
               "files",
               "id",
               "storageLocation",
-              "text"
+              "comment"
             );
           });
       });
@@ -185,12 +185,12 @@ describe("Best Memories resource", function() {
       const newAlbum = {
         albumName: faker.name.findName(),
         dateCreated: faker.date.past(),
-        text: faker.lorem.text(),
+        comment: faker.lorem.text(),
         files: [
           {
             fileName: faker.name.findName(),
             dateAdded: faker.date.past(),
-            text: faker.lorem.text(),
+            comment: faker.lorem.text(),
             storageLocation: "url"
           }
         ]
@@ -207,7 +207,7 @@ describe("Best Memories resource", function() {
             "id",
             "albumName",
             "dateCreated",
-            "text",
+            "comment",
             "files"
           );
           expect(res.body.id).to.not.equal(null);
@@ -218,7 +218,7 @@ describe("Best Memories resource", function() {
         .then(album => {
           album.albumName.should.equal(newAlbum.albumName);
           //album.dateCreated.should.equal(newAlbum.dateCreated);
-          album.text.should.equal(newAlbum.text);
+          album.comment.should.equal(newAlbum.comment);
         });
     });
   });
@@ -234,18 +234,18 @@ describe("Best Memories resource", function() {
       const updateData = {
         albumName: faker.name.findName(),
         dateCreated: faker.date.past(),
-        text: faker.lorem.text(),
+        comment: faker.lorem.text(),
         files: [
           {
             fileName: faker.name.findName(),
             dateAdded: faker.date.past(),
-            text: faker.lorem.text(),
+            comment: faker.lorem.text(),
             storageLocation: "url"
           },
           {
             fileName: faker.name.findName(),
             dateAdded: faker.date.past(),
-            text: faker.lorem.text(),
+            comment: faker.lorem.text(),
             storageLocation: "url"
           }
         ]
@@ -272,7 +272,7 @@ describe("Best Memories resource", function() {
         .then(album => {
           album.albumName.should.equal(updateData.albumName);
           //album.dateCreated.should.equal(updateData.dateCreated);
-          album.text.should.equal(updateData.text);
+          album.comment.should.equal(updateData.comment);
         });
     });
   });
