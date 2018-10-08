@@ -301,7 +301,9 @@ describe("Best Memories resource", function() {
     });
   });
 
-  describe("S3 endpoint DELETE file", function() {
+  // Note: since AWS s3 may charge a lot for running this test frequently we don't want to run it all the time.
+  // Please use it wisely only before commit!!!
+  /*describe("S3 endpoint DELETE file", function() {
     it("should delete one file from AWS S3 bucket and confirm that the file is not there", function() {
       let res;
       let s3Data = {
@@ -349,5 +351,5 @@ describe("Best Memories resource", function() {
             });
         });
     });
-  });
+  });*/
 });
