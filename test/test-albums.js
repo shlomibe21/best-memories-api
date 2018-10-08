@@ -276,4 +276,78 @@ describe("Best Memories resource", function() {
         });
     });
   });
+
+  describe("S3 endpoint", function() {
+    it("Should perform 'Pre-signing a putObject', expected to return an image URL", function() {
+      let s3Data = {
+        fileName: "test.png",
+        fileType: "image/png"
+      };
+
+      return chai
+        .request(app)
+        .get(
+          `/api/albums/sign-s3?file-name=${s3Data.fileName}&file-type=${
+            s3Data.fileType
+          }`
+        )
+        .set("Authorization", `Bearer ${token}`)
+        .then(function(res) {
+          let response = JSON.parse(res.text);
+          expect(res).to.have.status(200);
+          expect(response).to.be.a("object");
+          expect(response).to.include.keys("signedRequest", "url");
+        });
+    });
+  });
+
+  describe("S3 endpoint DELETE file", function() {
+    it("should delete one file from AWS S3 bucket and confirm that the file is not there", function() {
+      let res;
+      let s3Data = {
+        fileName: "test.png",
+        fileType: "image/png"
+      };
+
+      // Check first that the file is in the bucket
+      return chai
+        .request(app)
+        .get(
+          `/api/albums/get-head-object-s3?file-name=${
+            s3Data.fileName
+          }&file-type=${s3Data.fileType}`
+        )
+        .then(function(_res) {
+          res = _res;
+          expect(res).to.have.status(200);
+          // Then delete the file
+          return chai
+            .request(app)
+            .delete(
+              `/api/albums/delete-object-s3?file-name=${
+                s3Data.fileName
+              }&file-type=${s3Data.fileType}`
+            )
+            .then(function(_res) {
+              res = _res;
+              // Delete always returns status=200 even if object is not there.
+              // Therefore we need to check the object's head to confirm that the
+              // object is not there anymore
+              expect(res).to.have.status(200);
+              // Make sure that the file is not in the bucket
+              return chai
+                .request(app)
+                .get(
+                  `/api/albums/get-head-object-s3?file-name=${
+                    s3Data.fileName
+                  }&file-type=${s3Data.fileType}`
+                )
+                .then(function(_res) {
+                  res = _res;
+                  expect(res).to.have.status(404);
+                });
+            });
+        });
+    });
+  });
 });

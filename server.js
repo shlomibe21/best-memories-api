@@ -17,10 +17,12 @@ const bodyParser = require('body-parser');
 // CORS
 app.use(function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    res.header('Access-Control-Allow-Headers', 'X-Custom-Header,Origin,X-Requested-With,Content-Type,Authorization,Accept');
     res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE');
+    res.header('Accept','application/json');
+    res.header('content-type','application/json');
     if (req.method === 'OPTIONS') {
-        return res.send(204);
+        return res.sendStatus(204);
     }
     next();
 });
