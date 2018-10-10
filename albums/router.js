@@ -84,9 +84,9 @@ router.get("/get-head-object-s3", (req, res) => {
   s3.headObject(s3Params, (err, data) => {
     if (err) {
       console.log(err.statusCode);
-      if(err.statusCode === 404) {
-          res.status(404).end();
-          return;
+      if (err.statusCode === 404) {
+        res.status(404).end();
+        return;
       }
       res
         .status(500)
@@ -103,8 +103,7 @@ router.delete("/delete-object-s3", (req, res) => {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
   });
-  const fileName = req.query["file-name"];
-  const fileType = req.query["file-type"];
+  const fileName = req.body.fileName;
   const s3Params = {
     Bucket: S3_BUCKET,
     Key: fileName
@@ -235,7 +234,7 @@ router.get("/:id/:fileid", (req, res) => {
     });
 });
 
-// PUT request, add new media files to an album
+// PATCH request, add a new media files to an album
 router.patch("/:id", (req, res) => {
   if (!(req.params.id && req.body.id && req.params.id === req.body.id)) {
     const message = `Request path id \`${req.params.id}\` and request body id 
@@ -259,7 +258,7 @@ router.patch("/:id", (req, res) => {
     { $push: toUpdate },
     { new: true }
   )
-    .then(album => res.status(201).json(album))
+    .then(album => res.status(204).json(album))
     .catch(error => {
       res
         .status(500)
@@ -280,6 +279,21 @@ router.delete("/:id/:fileid", (req, res) => {
         .status(500)
         .json({ message: "DELETE single file: Internal server error" })
     );
+});
+
+// PATCH request, update a single file
+router.patch("/:id/:fileid", (req, res) => {
+  console.log(`Updating a file item: \`${req.params.fileid}\``);
+  Albums.findOneAndUpdate(
+    { "_id": req.params.id, "files._id": req.params.fileid },
+    { "$set": {"files.$.fileName": req.body.fileName, "files.$.comment": req.body.comment}}
+  )
+    .then(album => res.status(204).json(album))
+    .catch(error => {
+      res
+        .status(500)
+        .json({ message: "PATCH file error: Internal server error" });
+    });
 });
 
 module.exports = { router };
