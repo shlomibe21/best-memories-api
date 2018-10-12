@@ -4,17 +4,23 @@ const chai = require("chai");
 const chaiHttp = require("chai-http");
 const faker = require("faker");
 const mongoose = require("mongoose");
-
+const jwt = require("jsonwebtoken");
 // this makes the expect syntax available throughout this module
 const expect = chai.expect;
 // this makes the should syntax available throughout this module
 const should = chai.should();
 
 const { Albums } = require("../albums/models");
+const { User } = require("../users/models");
 const { closeServer, runServer, app } = require("../server");
-const { TEST_DATABASE_URL } = require("../config");
+const { TEST_DATABASE_URL, JWT_SECRET } = require("../config");
 
 chai.use(chaiHttp);
+
+const username = "exampleUser";
+const password = "examplePass";
+const firstName = "Example";
+const lastName = "User";
 
 // this function deletes the entire database.
 // we'll call it in an `afterEach` block below
@@ -63,6 +69,17 @@ function seedAlbumsData() {
   return Albums.insertMany(seedData);
 }
 
+function createUserProfile() {
+  return User.hashPassword(password).then(password =>
+    User.create({
+      username,
+      password,
+      firstName,
+      lastName
+    })
+  );
+}
+
 describe("Best Memories resource", function() {
   let token;
 
@@ -71,7 +88,24 @@ describe("Best Memories resource", function() {
   });
 
   beforeEach(function() {
-    return seedAlbumsData();
+    return createUserProfile().then(function() {
+      token = jwt.sign(
+        {
+          user: {
+            username,
+            firstName,
+            lastName
+          }
+        },
+        JWT_SECRET,
+        {
+          algorithm: "HS256",
+          subject: username,
+          expiresIn: "7d"
+        }
+      );
+      return seedAlbumsData();
+    });
   });
 
   afterEach(function() {
@@ -98,6 +132,7 @@ describe("Best Memories resource", function() {
       return chai
         .request(app)
         .get("/api/albums")
+        .set('Authorization', `Bearer ${token}`)
         .then(function(_res) {
           res = _res;
           expect(res).to.have.status(200);
@@ -130,6 +165,7 @@ describe("Best Memories resource", function() {
         return chai
           .request(app)
           .get(`/api/albums/${albumId}`)
+          .set('Authorization', `Bearer ${token}`)
           .then(function(_res) {
             res = _res;
             expect(res).to.have.status(200);
@@ -146,33 +182,6 @@ describe("Best Memories resource", function() {
       });
     });
   });
-
-  /*describe("GET /api/albums/:id/:fileid", () => {
-    it("Should return one media file found by its id", () => {
-      let res;
-      return Albums.findOne().then(album => {
-        let albumId = album.id;
-        let fileId = album.files[0].id;
-        return chai
-          .request(app)
-          .get(`/api/albums/${albumId}/${fileId}`)
-          .then(function(_res) {
-            res = _res;
-            expect(res).to.have.status(200);
-            expect(res).to.be.json;
-            expect(res.body).to.be.a("object");
-            expect(res.body).to.have.all.keys(
-              "dateAdded",
-              "fileName",
-              "files",
-              "id",
-              "storageLocation",
-              "comment"
-            );
-          });
-      });
-    });
-  });*/
 
   // TODO: add test to more fields and fix date compare issue
   describe("POST /api/albums", function() {
@@ -198,6 +207,7 @@ describe("Best Memories resource", function() {
       return chai
         .request(app)
         .post("/api/albums")
+        .set('Authorization', `Bearer ${token}`)
         .send(newAlbum)
         .then(function(res) {
           expect(res).to.have.status(201);
@@ -261,7 +271,7 @@ describe("Best Memories resource", function() {
             chai
               .request(app)
               .put(`/api/albums/${album.id}`)
-              /*.set("Authorization", `Bearer ${token}`)*/
+              .set("Authorization", `Bearer ${token}`)
               .send(updateData)
           );
         })
@@ -303,7 +313,7 @@ describe("Best Memories resource", function() {
 
   // Note: since AWS s3 may charge for running this test frequently we don't want to run it all the time.
   // Please use it wisely only before commit!!!
-  describe("S3 endpoint DELETE file", function() {
+  /*describe("S3 endpoint DELETE file", function() {
     it("should delete one file from AWS S3 bucket and confirm that the file is not there", function() {
       let res;
       let s3Data = {
@@ -319,6 +329,7 @@ describe("Best Memories resource", function() {
             s3Data.fileName
           }&file-type=${s3Data.fileType}`
         )
+        .set('Authorization', `Bearer ${token}`)
         .then(function(_res) {
           res = _res;
           expect(res).to.have.status(200);
@@ -351,5 +362,5 @@ describe("Best Memories resource", function() {
             });
         });
     });
-  });
+  });*/
 });

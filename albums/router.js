@@ -3,6 +3,7 @@
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
+const passport = require("passport");
 const { Albums } = require("./models");
 
 const aws = require("aws-sdk");
@@ -10,6 +11,11 @@ const aws = require("aws-sdk");
 const jsonParser = bodyParser.json();
 const { S3_BUCKET, S3_URL } = require("../config");
 
+const jwtAuth = passport.authenticate("jwt", { session: false });
+
+/*****************************************************************************/
+/******************************** AWS S3 Routes ******************************/
+/*****************************************************************************/
 aws.config.region = "us-east-1";
 // AWS S3 - GET Signed URL
 router.get("/sign-s3", (req, res) => {
@@ -119,9 +125,12 @@ router.delete("/delete-object-s3", (req, res) => {
   });
 });
 
+/*****************************************************************************/
+/******************************** DB Routes **********************************/
+/*****************************************************************************/
 // GET request to display all albums
-router.get("/", (req, res) => {
-  Albums.find()
+router.get("/", jwtAuth, (req, res) => {
+  Albums.find({ user: req.user.id })
     .then(albums => {
       res.json({
         albums: albums.map(album => album.serialize())
@@ -136,8 +145,8 @@ router.get("/", (req, res) => {
 });
 
 // GET ID request to display one album
-router.get("/:id", (req, res) => {
-  Albums.findById(req.params.id)
+router.get("/:id", jwtAuth, (req, res) => {
+  Albums.findById({ _id: req.params.id, user: req.user.id })
     .then(album => res.json(album.serialize()))
     .catch(error => {
       console.error(error);
@@ -148,7 +157,7 @@ router.get("/:id", (req, res) => {
 });
 
 // POST request, create a new album
-router.post("/", (req, res) => {
+router.post("/", jwtAuth, (req, res) => {
   console.log(req.user);
   const requiredFields = ["albumName", "dateCreated"];
   for (let i = 0; i < requiredFields.length; i++) {
@@ -164,6 +173,7 @@ router.post("/", (req, res) => {
     albumName: req.body.albumName,
     dateCreated: req.body.dateCreated,
     comment: req.body.comment,
+    user: req.user.id,
     files: req.body.files
   })
     .then(Albums => {
@@ -178,7 +188,7 @@ router.post("/", (req, res) => {
 });
 
 // PUT request, update album
-router.put("/:id", (req, res) => {
+router.put("/:id", jwtAuth, (req, res) => {
   if (!(req.params.id && req.body.id && req.params.id === req.body.id)) {
     const message = `Request path id \`${req.params.id}\` and request body id 
 		\`${req.body.id}\` must match.`;
@@ -197,9 +207,8 @@ router.put("/:id", (req, res) => {
       toUpdate[field] = req.body[field];
     }
   });
-  console.log(`Updating an album item: \`${req.params.id}\``);
   Albums.findByIdAndUpdate(
-    { _id: req.params.id },
+    { _id: req.params.id,  user: req.user.id },
     { $set: toUpdate },
     { new: true }
   )
@@ -212,17 +221,17 @@ router.put("/:id", (req, res) => {
 });
 
 // DELETE request, delete a single album
-router.delete("/:id", (req, res) => {
-  Albums.findByIdAndRemove(req.params.id).then(() => {
+router.delete("/:id", jwtAuth, (req, res) => {
+  Albums.findByIdAndRemove({ _id:req.params.id, user: req.user.id}).then(() => {
     console.log(`Deleted album with id \`${req.params.id}\``);
     res.status(204).end();
   });
 });
 
 // GET request to display one media file
-router.get("/:id/:fileid", (req, res) => {
+router.get("/:id/:fileid", jwtAuth, (req, res) => {
   Albums.findOne(
-    { _id: req.params.id },
+    { _id: req.params.id, user: req.user.id },
     { files: { $elemMatch: { _id: req.params.fileid } } }
   )
     .then(file => res.json(file.serialize()))
@@ -235,7 +244,7 @@ router.get("/:id/:fileid", (req, res) => {
 });
 
 // PATCH request, add a new media files to an album
-router.patch("/:id", (req, res) => {
+router.patch("/:id", jwtAuth, (req, res) => {
   if (!(req.params.id && req.body.id && req.params.id === req.body.id)) {
     const message = `Request path id \`${req.params.id}\` and request body id 
           \`${req.body.id}\` must match.`;
@@ -267,7 +276,7 @@ router.patch("/:id", (req, res) => {
 });
 
 // DELETE request, delete one media file
-router.delete("/:id/:fileid", (req, res) => {
+router.delete("/:id/:fileid", jwtAuth, (req, res) => {
   Albums.update(
     { _id: req.params.id },
     { $pull: { files: { _id: req.params.fileid } } },
@@ -282,11 +291,16 @@ router.delete("/:id/:fileid", (req, res) => {
 });
 
 // PATCH request, update a single file
-router.patch("/:id/:fileid", (req, res) => {
+router.patch("/:id/:fileid", jwtAuth, (req, res) => {
   console.log(`Updating a file item: \`${req.params.fileid}\``);
   Albums.findOneAndUpdate(
-    { "_id": req.params.id, "files._id": req.params.fileid },
-    { "$set": {"files.$.fileName": req.body.fileName, "files.$.comment": req.body.comment}}
+    { _id: req.params.id, "files._id": req.params.fileid },
+    {
+      $set: {
+        "files.$.fileName": req.body.fileName,
+        "files.$.comment": req.body.comment
+      }
+    }
   )
     .then(album => res.status(204).json(album))
     .catch(error => {
