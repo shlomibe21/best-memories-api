@@ -130,7 +130,11 @@ router.delete("/delete-object-s3", (req, res) => {
 /*****************************************************************************/
 // GET request to display all albums
 router.get("/", jwtAuth, (req, res) => {
-  Albums.find({ user: req.user.id })
+  const text = req.query["text"];
+  Albums.find({
+    user: req.user.id,
+    albumName: { $regex: ".*" + text + ".*", $options: "i" }
+  })
     .then(albums => {
       res.json({
         albums: albums.map(album => album.serialize())
@@ -155,6 +159,28 @@ router.get("/:id", jwtAuth, (req, res) => {
       });
     });
 });
+
+// GET request to display one media file
+/*router.get("/:id", jwtAuth, (req, res) => {
+    const text = "";
+  Albums.findById(
+    { _id: req.params.id, user: req.user.id },
+    {
+      files: {
+        
+        $elemMatch:{fileName: { $regex: ".*" + text + ".*", $options: "i" }
+        }
+      }}
+    
+  )
+    .then(album => res.json(album.serialize()))
+    .catch(err => {
+      console.error(err);
+      res
+        .status(500)
+        .json({ message: "GET media file by id error: Internal server error" });
+    });
+});*/
 
 // POST request, create a new album
 router.post("/", jwtAuth, (req, res) => {
@@ -208,7 +234,7 @@ router.put("/:id", jwtAuth, (req, res) => {
     }
   });
   Albums.findByIdAndUpdate(
-    { _id: req.params.id,  user: req.user.id },
+    { _id: req.params.id, user: req.user.id },
     { $set: toUpdate },
     { new: true }
   )
@@ -222,10 +248,12 @@ router.put("/:id", jwtAuth, (req, res) => {
 
 // DELETE request, delete a single album
 router.delete("/:id", jwtAuth, (req, res) => {
-  Albums.findByIdAndRemove({ _id:req.params.id, user: req.user.id}).then(() => {
-    console.log(`Deleted album with id \`${req.params.id}\``);
-    res.status(204).end();
-  });
+  Albums.findByIdAndRemove({ _id: req.params.id, user: req.user.id }).then(
+    () => {
+      console.log(`Deleted album with id \`${req.params.id}\``);
+      res.status(204).end();
+    }
+  );
 });
 
 // GET request to display one media file
@@ -292,7 +320,7 @@ router.delete("/:id/:fileid", jwtAuth, (req, res) => {
 
 // PATCH request, update a single file
 router.patch("/:id/:fileid", jwtAuth, (req, res) => {
-  console.log(`Updating a file item: \`${req.params.fileid}\``);
+  //console.log(`Updating a file item: \`${req.params.fileid}\``);
   Albums.findOneAndUpdate(
     { _id: req.params.id, "files._id": req.params.fileid },
     {
