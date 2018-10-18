@@ -5,6 +5,7 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const passport = require("passport");
 const { Albums } = require("./models");
+var ObjectID = require("mongodb").ObjectID;
 
 const aws = require("aws-sdk");
 
@@ -130,7 +131,10 @@ router.delete("/delete-object-s3", (req, res) => {
 /*****************************************************************************/
 // GET request to display all albums
 router.get("/", jwtAuth, (req, res) => {
-  const text = req.query["text"];
+  let text = "";
+  if (req.query["text"]) {
+    text = req.query["text"];
+  }
   Albums.find({
     user: req.user.id,
     albumName: { $regex: ".*" + text + ".*", $options: "i" }
@@ -160,27 +164,40 @@ router.get("/:id", jwtAuth, (req, res) => {
     });
 });
 
-// GET request to display one media file
-/*router.get("/:id", jwtAuth, (req, res) => {
-    const text = "";
-  Albums.findById(
-    { _id: req.params.id, user: req.user.id },
+// Search for files in a single album
+router.get("/search/:id", jwtAuth, (req, res) => {
+  let text = "";
+  if (req.query["text"]) {
+    text = req.query["text"];
+  }
+  let albumid = new ObjectID(req.params.id);
+  let userid = new ObjectID(req.user.id);
+  Albums.aggregate([
+    { $match: { _id: albumid, user: userid } },
     {
-      files: {
-        
-        $elemMatch:{fileName: { $regex: ".*" + text + ".*", $options: "i" }
-        }
-      }}
-    
-  )
-    .then(album => res.json(album.serialize()))
+      $unwind: { path: "$files", preserveNullAndEmptyArrays: true}
+    },
+    {
+      $match: {
+        "files.fileName": { $regex: ".*" + text + ".*", $options: "i" }
+      }
+    },
+    {
+      $group: {
+        _id: "$_id",
+        albumName: { $first: "$_id.albumName" },
+        files: { $push: "$files" }
+      }
+    }
+  ])
+    .then(albums => res.json(albums[0]))
     .catch(err => {
       console.error(err);
       res
         .status(500)
         .json({ message: "GET media file by id error: Internal server error" });
     });
-});*/
+});
 
 // POST request, create a new album
 router.post("/", jwtAuth, (req, res) => {
@@ -194,19 +211,36 @@ router.post("/", jwtAuth, (req, res) => {
       return res.status(400).send(message);
     }
   }
-
-  Albums.create({
-    albumName: req.body.albumName,
-    dateCreated: req.body.dateCreated,
-    comment: req.body.comment,
-    user: req.user.id,
-    files: req.body.files
-  })
+  return Albums.find({ albumName: req.body.albumName })
+    .countDocuments()
+    .then(count => {
+      if (count > 0) {
+        // There is already an album with the same name
+        return Promise.reject({
+          code: 422,
+          reason: "ValidationError",
+          message: "Album Name already taken",
+          location: "albumname"
+        });
+      }
+    })
+    .then(() => {
+      return Albums.create({
+        albumName: req.body.albumName,
+        dateCreated: req.body.dateCreated,
+        comment: req.body.comment,
+        user: req.user.id,
+        files: req.body.files
+      });
+    })
     .then(Albums => {
       res.status(201).json(Albums.serialize());
     })
     .catch(err => {
       console.error(err);
+      if (err.reason === "ValidationError") {
+        return res.status(err.code).json(err);
+      }
       res
         .status(500)
         .json({ error: "POST album error: Internal server error" });
@@ -325,7 +359,7 @@ router.patch("/:id/:fileid", jwtAuth, (req, res) => {
     { _id: req.params.id, "files._id": req.params.fileid },
     {
       $set: {
-        "files.$.fileName": req.body.fileName,
+        "files.$.frontEndFileName": req.body.frontEndFileName,
         "files.$.comment": req.body.comment
       }
     }

@@ -52,12 +52,14 @@ function seedAlbumsData() {
       files: [
         {
           fileName: faker.name.findName(),
+          frontEndFileName: faker.name.findName(),
           dateAdded: faker.date.past(),
           comment: faker.lorem.text(),
           storageLocation: "url"
         },
         {
           fileName: faker.name.findName(),
+          frontEndFileName: faker.name.findName(),
           dateAdded: faker.date.past(),
           comment: faker.lorem.text(),
           storageLocation: "url"
@@ -132,7 +134,7 @@ describe("Best Memories resource", function() {
       return chai
         .request(app)
         .get("/api/albums")
-        .set('Authorization', `Bearer ${token}`)
+        .set("Authorization", `Bearer ${token}`)
         .then(function(_res) {
           res = _res;
           expect(res).to.have.status(200);
@@ -165,7 +167,7 @@ describe("Best Memories resource", function() {
         return chai
           .request(app)
           .get(`/api/albums/${albumId}`)
-          .set('Authorization', `Bearer ${token}`)
+          .set("Authorization", `Bearer ${token}`)
           .then(function(_res) {
             res = _res;
             expect(res).to.have.status(200);
@@ -198,6 +200,7 @@ describe("Best Memories resource", function() {
         files: [
           {
             fileName: faker.name.findName(),
+            frontEndFileName: faker.name.findName(),
             dateAdded: faker.date.past(),
             comment: faker.lorem.text(),
             storageLocation: "url"
@@ -207,7 +210,7 @@ describe("Best Memories resource", function() {
       return chai
         .request(app)
         .post("/api/albums")
-        .set('Authorization', `Bearer ${token}`)
+        .set("Authorization", `Bearer ${token}`)
         .send(newAlbum)
         .then(function(res) {
           expect(res).to.have.status(201);
@@ -248,12 +251,14 @@ describe("Best Memories resource", function() {
         files: [
           {
             fileName: faker.name.findName(),
+            frontEndFileName: faker.name.findName(),
             dateAdded: faker.date.past(),
             comment: faker.lorem.text(),
             storageLocation: "url"
           },
           {
             fileName: faker.name.findName(),
+            frontEndFileName: faker.name.findName(),
             dateAdded: faker.date.past(),
             comment: faker.lorem.text(),
             storageLocation: "url"
@@ -267,13 +272,11 @@ describe("Best Memories resource", function() {
 
           // make request then inspect it to make sure it reflects
           // data we sent
-          return (
-            chai
-              .request(app)
-              .put(`/api/albums/${album.id}`)
-              .set("Authorization", `Bearer ${token}`)
-              .send(updateData)
-          );
+          return chai
+            .request(app)
+            .put(`/api/albums/${album.id}`)
+            .set("Authorization", `Bearer ${token}`)
+            .send(updateData);
         })
         .then(function(res) {
           expect(res).to.have.status(201);

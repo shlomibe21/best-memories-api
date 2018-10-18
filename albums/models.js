@@ -14,6 +14,7 @@ const albumSchema = mongoose.Schema({
   files: [
     {
       fileName: { type: String, required: true },
+      frontEndFileName: { type: String, required: true },
       dateAdded: { type: Date },
       comment: { type: String },
       storageLocation: { type: String },

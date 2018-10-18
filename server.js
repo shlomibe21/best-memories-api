@@ -58,6 +58,7 @@ app.use("*", (req, res) => {
 let server;
 
 function runServer(databaseUrl, port = PORT) {
+  //mongoose.set("debug", true);
   return new Promise((resolve, reject) => {
     mongoose.connect(
       databaseUrl,
