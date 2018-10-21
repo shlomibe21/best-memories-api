@@ -155,7 +155,9 @@ router.get("/", jwtAuth, (req, res) => {
 // GET ID request to display one album
 router.get("/:id", jwtAuth, (req, res) => {
   Albums.findById({ _id: req.params.id, user: req.user.id })
-    .then(album => res.json(album.serialize()))
+    .then(album => {
+      res.json(album.serialize());
+    })
     .catch(error => {
       console.error(error);
       res.status.json({
@@ -175,7 +177,7 @@ router.get("/search/:id", jwtAuth, (req, res) => {
   Albums.aggregate([
     { $match: { _id: albumid, user: userid } },
     {
-      $unwind: { path: "$files", preserveNullAndEmptyArrays: true}
+      $unwind: { path: "$files", preserveNullAndEmptyArrays: true }
     },
     {
       $match: {
@@ -185,12 +187,34 @@ router.get("/search/:id", jwtAuth, (req, res) => {
     {
       $group: {
         _id: "$_id",
-        albumName: { $first: "$_id.albumName" },
+        id: { $first: "$_id" },
+        albumName: { $first: "$albumName" },
+        dateCreated: { $first: "$dateCreated" },
+        comment: { $first: "$comment" },
         files: { $push: "$files" }
       }
     }
   ])
-    .then(albums => res.json(albums[0]))
+    .then(albums => {
+      if (albums && albums.length > 0) {
+        console.log("Files search succecful");
+        res.json(albums[0]);
+      } else {
+        // Get only album without files!
+        //Albums.findById(id, "-files");
+        Albums.findById({ _id: req.params.id, user: req.user.id }, "-files")
+          .then(album => {
+            console.log("Files search un-succecful return album only:");
+            res.json(album.serialize());
+          })
+          .catch(error => {
+            console.error(error);
+            res.status.json({
+              message: "GET album by id error: internal server error"
+            });
+          });
+      }
+    })
     .catch(err => {
       console.error(err);
       res
