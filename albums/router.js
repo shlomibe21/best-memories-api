@@ -201,7 +201,6 @@ router.get("/search/:id", jwtAuth, (req, res) => {
         res.json(albums[0]);
       } else {
         // Get only album without files!
-        //Albums.findById(id, "-files");
         Albums.findById({ _id: req.params.id, user: req.user.id }, "-files")
           .then(album => {
             console.log("Files search un-succecful return album only:");
