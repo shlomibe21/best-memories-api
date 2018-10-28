@@ -20,15 +20,24 @@ const bodyParser = require("body-parser");
 app.use(morgan("common"));
 
 // CORS
-app.use(function(req, res, next) {
+// Import the library:
+const cors = require("cors");
+const { CLIENT_ORIGIN } = require("./config");
+// Use it before routes are set up:
+app.use(
+  cors({
+    origin: CLIENT_ORIGIN
+  })
+);
+/*app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE");
+  res.header("Access-Control-Allow-Headers", "Origin,Content-Type,Authorization,X-Auth-Token, X-Requested-With, Accept");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   if (req.method === "OPTIONS") {
-    return res.send(204);
+    return res.sendStatus(204);
   }
   next();
-});
+});*/
 
 app.use(express.static("public"));
 app.use(bodyParser.json());

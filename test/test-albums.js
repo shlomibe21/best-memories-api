@@ -151,7 +151,7 @@ describe("Best Memories resource", function() {
               "files"
             );
           });
-          return Albums.countDocuments();
+          return Albums.count();
         })
         .then(function(count) {
           expect(res.body.albums).to.have.lengthOf(count);
