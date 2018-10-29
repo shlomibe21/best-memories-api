@@ -29,7 +29,7 @@ router.get("/sign-s3", (req, res) => {
   const s3Params = {
     Bucket: S3_BUCKET,
     Key: `${fileName}`,
-    //Expires: 600,
+    Expires: 600,
     ACL: "public-read",
     ContentType: fileType
   };
@@ -39,16 +39,12 @@ router.get("/sign-s3", (req, res) => {
       console.log(err);
       return res.end();
     }
-    res.json({
-      signedRequest: data,
-      url: `${S3_URL}${fileName}`
-    });
-    /*const returnData = {
+    const returnData = {
       signedRequest: data,
       url: `${S3_URL}${fileName}`
     };
     res.write(JSON.stringify(returnData));
-    res.end();*/
+    res.end();
   });
 });
 
