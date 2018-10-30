@@ -235,7 +235,7 @@ router.post("/", jwtAuth, (req, res) => {
       return res.status(400).send(message);
     }
   }
-  return Albums.find({ albumName: req.body.albumName })
+  return Albums.find({ albumName: req.body.albumName, user: req.user.id })
     .countDocuments()
     .then(count => {
       if (count > 0) {
