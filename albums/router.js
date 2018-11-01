@@ -225,7 +225,7 @@ router.get("/search/:id", jwtAuth, (req, res) => {
 
 // POST request, create a new album
 router.post("/", jwtAuth, (req, res) => {
-  console.log(req.user);
+  //console.log(req.user);
   const requiredFields = ["albumName", "dateCreated"];
   for (let i = 0; i < requiredFields.length; i++) {
     const field = requiredFields[i];
@@ -308,7 +308,7 @@ router.put("/:id", jwtAuth, (req, res) => {
 router.delete("/:id", jwtAuth, (req, res) => {
   Albums.findByIdAndRemove({ _id: req.params.id, user: req.user.id }).then(
     () => {
-      console.log(`Deleted album with id \`${req.params.id}\``);
+      //console.log(`Deleted album with id \`${req.params.id}\``);
       res.status(204).end();
     }
   );
@@ -347,7 +347,7 @@ router.patch("/:id", jwtAuth, (req, res) => {
       toUpdate[field] = req.body[field];
     }
   });
-  console.log(`Updating an album item: \`${req.params.id}\``);
+  //console.log(`Updating an album item: \`${req.params.id}\``);
   Albums.findByIdAndUpdate(
     { _id: req.params.id },
     { $push: toUpdate },

@@ -185,7 +185,6 @@ describe("Best Memories resource", function() {
     });
   });
 
-  // TODO: add test to more fields and fix date compare issue
   describe("POST /api/albums", function() {
     it("should add a new album on POST", function() {
       // strategy:
@@ -236,7 +235,6 @@ describe("Best Memories resource", function() {
     });
   });
 
-  // TODO: add test to more fields and fix date compare issue
   describe("PUT /api/albums", function() {
     // strategy:
     //  1. Get an existing album from db
