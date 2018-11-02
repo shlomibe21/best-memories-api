@@ -8,10 +8,10 @@ Users can also make personal albums for family members or friends for a special 
 We all have plenty of digital photos stored somewhere on our hard drive, phone, or the cloud. But it is always hard to go back and find the pictures that we really like. Best Memories was created to help with this matter. Users can easily upload media files like photos and short videos to the cloud (stored on AWS S3) and create different albums for different events, occasions, or subjects with the option to add a unique name and comments to each album and to each media file.
 
 ## Live Demo
-- [Best Memories Live Demo](https://best-memories.herokuapp.com/)
-To run an existing demo, use the following login credentials:
-- User: demo
-- Password: tryItNow123
+- [To go to Best Memories live demo click here](https://best-memories.herokuapp.com/)
+- **To run the demo, click on the demo button from the application or use the following login credentials:**
+  - User: demo
+  - Password: tryItNow123
 
 ## App Screeshots
 
